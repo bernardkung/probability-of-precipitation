@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Probability of Precipitation</title>
+  
+  <link rel="stylesheet" ref="./assets/styles.css">
+</head>
+
+<body>
+  <button id="start">Click!</button>
+
+  <div class="container">
+    <p>Damage: <span id="n_dmg" data-value=1>1</span></p>
+    <p>Gold: <span id="n_gold" data-value=0>0</span></p>
+    <p>Mobs: <span id="n_mobs" data-value=0>0</span></p>
+    <p>Kills: <span id="n_kills" data-value=0>0</span></p>
+  </div>
+<script>
+  const clocker = setInterval(incrementGame, 1000);
+  const n_dmg   = document.querySelector("#n_dmg");
+  const n_gold  = document.querySelector("#n_gold");
+  const n_mobs  = document.querySelector("#n_mobs");
+  const n_kills = document.querySelector("#n_kills");
+  
+  let spawnProbability = 0.5;
+  
+  function spawnMob() {
+    const roll = Math.random();
+    console.log(roll);
+    if (roll >= spawnProbability) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+  
+  function incrementGame() {
+    increaseValue("#n_kills");
+    if (spawnMob()) {
+      increaseValue("#n_mobs");
+    }
+  };
+  
+  
+  function increaseValue(ele_name) {
+    const ele = document.querySelector(ele_name);
+    const new_value = parseInt(ele.dataset.value)+1;
+    ele.dataset.value = new_value;
+    ele.textContent = new_value;
+  }
+  
+  const startButton = document.querySelector("#start");
+  
+  function startRun() {
+    console.log("Start!");  
+  };
+  
+  startButton.addEventListener("click", startRun);
+</script>
+  
+</body>
+
+
+</html>
