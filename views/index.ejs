@@ -11,54 +11,140 @@
 
 <body>
   <button id="start">Click!</button>
+  <button id="test">Test!</button>
 
   <div class="container">
-    <p>Damage: <span id="n_dmg" data-value=1>1</span></p>
-    <p>Gold: <span id="n_gold" data-value=0>0</span></p>
-    <p>Mobs: <span id="n_mobs" data-value=0>0</span></p>
-    <p>Kills: <span id="n_kills" data-value=0>0</span></p>
+    <p>Teleporter Stage: <span id="stage" data-value=1>1</span></p>
+    <p>Difficulty: <span id="difficulty" data-value=1>1</span></p>
+    <hr>
+    <p>Mob Health: <span id="m_health" data-value=0>100</span></p>
+    <p>Mob Gold: <span id="m_gold" data-value=0>100</span></p>
+    <p>Mob DPS: <span id="m_dps" data-value=0>100</span></p>
+    <hr>
+    <p>Player Health: <span id="p_health" data-value=100>100</span></p>
+    <p>Player DPS: <span id="p_dps" data-value=5>5</span></p>
+    <p>Player HPS: <span id="p_hps" data-value=0>0</span></p>
+    <p>Player Gold: <span id="p_gold" data-value=0>0</span></p>
+    <hr>
+    <p>Total Living Mobs: <span id="t_enemies" data-value=0>0</span></p>
+    <p>Total Mob Health: <span id="t_health" data-value=0>0</span></p>
+    <p>Total Mobs: <span id="t_mobs" data-value=0>0</span></p>
+    <p>Total Damage: <span id="t_dmg" data-value=0>0</span></p>
+    <p>Total Kills: <span id="t_kills" data-value=0>0</span></p>
+    
   </div>
 <script>
-  const clocker = setInterval(incrementGame, 1000);
-  const n_dmg   = document.querySelector("#n_dmg");
-  const n_gold  = document.querySelector("#n_gold");
-  const n_mobs  = document.querySelector("#n_mobs");
-  const n_kills = document.querySelector("#n_kills");
+  // const clocker = setInterval(incrementGame, 1000);
+  // const div_dmg     = document.querySelector("#n_dmg");
+  // const div_health  = document.querySelector("#n_health");
+  // const div_gold    = document.querySelector("#n_gold");
+  // const div_mobs    = document.querySelector("#n_mobs");
+  // const div_kills   = document.querySelector("#n_kills");
   
+  let teleporterStage = 1;
+  let difficulty = 1;
   let spawnProbability = 0.5;
   
-  function spawnMob() {
-    const roll = Math.random();
-    console.log(roll);
-    if (roll >= spawnProbability) {
-      return true;
-    } else {
-      return false;
-    }
-  };
+  let p_health  = {div:document.querySelector('#p_health'), val:10};
+  let p_dps     = {div:document.querySelector('#p_dps'), val:5};
+  let p_gold    = {div:document.querySelector('#p_gold'), val:0};
+  let p_hps     = {div:document.querySelector('#p_hps'), val:0};
+
+  let m_health  = {div:document.querySelector('#m_health'), val:10};
+  let m_dps     = {div:document.querySelector('#m_dps'), val:5};
+  let m_gold    = {div:document.querySelector('#m_gold'), val:10};
   
-  function incrementGame() {
-    increaseValue("#n_kills");
-    if (spawnMob()) {
-      increaseValue("#n_mobs");
-    }
-  };
+  let t_health  = {div:document.querySelector('#t_health'), val:0};
+  let t_mobs    = {div:document.querySelector('#t_mobs'), val:0};
+  let t_enemies = {div:document.querySelector('#t_enemies'), val:0};
+  let t_kills   = {div:document.querySelector('#t_kills'), val:0};
+  let t_dmg     = {div:document.querySelector('#t_dmg'), val:0};
   
-  
-  function increaseValue(ele_name) {
-    const ele = document.querySelector(ele_name);
-    const new_value = parseInt(ele.dataset.value)+1;
-    ele.dataset.value = new_value;
-    ele.textContent = new_value;
+  let prevStart = 0;
+    
+  function updateValue(value, valueChange) {
+    // Update actual value of valueName by valueAmount
+    value.val += valueChange;
+    // Update the corresponding div
+    value.div.dataset.value = value.val;
+    value.div.textContent = value.val;
   }
   
+  function iterateStage() {
+    console.log("Running iteration " + Date.now());
+    console.log("Seconds elapsed: " + ((Date.now() - prevStart) / 1000));
+    prevStart = Date.now();
+    // Spawn mobs
+    if (spawnMob()) {
+      console.log("New Mob Spawned!")
+      updateValue(t_mobs, 1);
+      updateValue(t_enemies, 1);
+      updateValue(t_health, m_health.val);
+    };
+    if (t_health.val > 0) {
+      // Player damage in a turn cannot be greater than total enemy health or less than zero
+      const new_dmg = Math.max(0, Math.min(p_dps.val, t_health.val))
+      console.log("New Damage: "  + new_dmg);
+      if (new_dmg > 0) {
+        // New total damage is calculated
+        updateValue(t_dmg, new_dmg);
+        // New kills are calculated
+        const new_kills = Math.max(Math.ceil(t_health.val / m_health.val) - Math.ceil((t_health.val - p_dps.val) / m_health.val), 0);
+        // New total mob health pool is calculated
+        updateValue(t_health, -new_dmg);
+        if (new_kills > 0) {        
+          console.log("New Kills: " + new_kills);
+          // Update total kill count
+          updateValue(t_kills, new_kills);
+          updateValue(t_enemies, -new_kills);
+          // Update player gold
+          updateValue(p_gold, new_kills * m_gold.val);
+        };
+      };
+      // Update player health after healing
+      updateValue(p_health, p_hps.val);
+      // Update player health after mob damage
+      updateValue(p_health, -(m_dps.val * Math.ceil(t_health.val / m_health.val)));
+    };
+  };
+    
+  // Start Game
   const startButton = document.querySelector("#start");
   
   function startRun() {
-    console.log("Start!");  
+    prevStart = Date.now();
+      console.log("Run Started!");
+    const runId = setInterval(() => {
+      iterateStage();
+      // Check if player died
+      checkDeath(runId);
+    }, 1000);
+  };
+  
+  function checkDeath(runId) {
+    if (p_health.val === 0) {clearInterval(runId)};
   };
   
   startButton.addEventListener("click", startRun);
+  
+  const testButton = document.querySelector("#test");
+  
+  function testRun() {
+    prevStart = Date.now();
+    iterateStage();
+  }
+  
+  testButton.addEventListener("click", testRun);
+  
+  function spawnMob() {
+    const roll = Math.random();
+    if (roll >= spawnProbability) {
+      return true
+    } else {
+      return false
+    }
+  };
+  
 </script>
   
 </body>
