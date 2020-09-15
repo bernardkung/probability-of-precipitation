@@ -38,6 +38,22 @@
   let difficulty = 1;
   let spawnProbability = 0.5;
 
+  class gameStatistic {
+    constructor(name, value, div) {
+      this.name = name;
+      this.value = value;
+      this.div = div;
+    }
+    // Update function to change both stored value and the displayed value in div
+    update(valueChange) {
+      this.value += valueChange;
+      if (this.div) {
+        this.div.dataset.value = this.value;
+        this.div.textContent = this.value;
+      }
+    }
+  }
+
   const gameState = {
     p_health  : {div:document.querySelector('#p_health'), val:10},
     p_dps     : {div:document.querySelector('#p_dps'), val:5},
