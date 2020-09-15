@@ -34,60 +34,51 @@
     
   </div>
 <script>
-  // const clocker = setInterval(incrementGame, 1000);
-  // const div_dmg     = document.querySelector("#n_dmg");
-  // const div_health  = document.querySelector("#n_health");
-  // const div_gold    = document.querySelector("#n_gold");
-  // const div_mobs    = document.querySelector("#n_mobs");
-  // const div_kills   = document.querySelector("#n_kills");
-  
   let teleporterStage = 1;
   let difficulty = 1;
   let spawnProbability = 0.5;
-  
-  let p_health  = {div:document.querySelector('#p_health'), val:10};
-  let p_dps     = {div:document.querySelector('#p_dps'), val:5};
-  let p_gold    = {div:document.querySelector('#p_gold'), val:0};
-  let p_hps     = {div:document.querySelector('#p_hps'), val:0};
 
-  let m_health  = {div:document.querySelector('#m_health'), val:10};
-  let m_dps     = {div:document.querySelector('#m_dps'), val:5};
-  let m_gold    = {div:document.querySelector('#m_gold'), val:10};
-  
-  let t_health  = {div:document.querySelector('#t_health'), val:0};
-  let t_mobs    = {div:document.querySelector('#t_mobs'), val:0};
-  let t_enemies = {div:document.querySelector('#t_enemies'), val:0};
-  let t_kills   = {div:document.querySelector('#t_kills'), val:0};
-  let t_dmg     = {div:document.querySelector('#t_dmg'), val:0};
-  
-  let prevStart = 0;
+  const gameState = {
+    p_health  : {div:document.querySelector('#p_health'), val:10},
+    p_dps     : {div:document.querySelector('#p_dps'), val:5},
+    p_gold    : {div:document.querySelector('#p_gold'), val:0},
+    p_hps     : {div:document.querySelector('#p_hps'), val:0},
+
+    m_health  : {div:document.querySelector('#m_health'), val:10},
+    m_dps     : {div:document.querySelector('#m_dps'), val:5},
+    m_gold    : {div:document.querySelector('#m_gold'), val:10},
+
+    t_health  : {div:document.querySelector('#t_health'), val:0},
+    t_mobs    : {div:document.querySelector('#t_mobs'), val:0},
+    t_enemies : {div:document.querySelector('#t_enemies'), val:0},
+    t_kills   : {div:document.querySelector('#t_kills'), val:0},
+    t_dmg     : {div:document.querySelector('#t_dmg'), val:0},
+  }
     
   function updateValue(value, valueChange) {
     // Update actual value of valueName by valueAmount
     value.val += valueChange;
     // Update the corresponding div
-    value.div.dataset.value = value.val;
-    value.div.textContent = value.val;
-  }
+    if (value.div) {
+      value.div.dataset.value = value.val;
+      value.div.textContent = value.val;
+    };
+  };
   
   function iterateStage() {
-    console.log("Running iteration " + Date.now());
-    console.log("Seconds elapsed: " + ((Date.now() - prevStart) / 1000));
-    prevStart = Date.now();
     // Spawn mobs
     if (spawnMob()) {
-      console.log("New Mob Spawned!")
       updateValue(t_mobs, 1);
       updateValue(t_enemies, 1);
       updateValue(t_health, m_health.val);
     };
+
     if (t_health.val > 0) {
       // Player damage in a turn cannot be greater than total enemy health or less than zero
-      const new_dmg = Math.max(0, Math.min(p_dps.val, t_health.val))
-      console.log("New Damage: "  + new_dmg);
+      const new_dmg = Math.max(0, Math.min(gameState['p_dps'].val, gameState['t_health'].val))
       if (new_dmg > 0) {
         // New total damage is calculated
-        updateValue(t_dmg, new_dmg);
+        updateValue(gameState['t_dmg'], new_dmg);
         // New kills are calculated
         const new_kills = Math.max(Math.ceil(t_health.val / m_health.val) - Math.ceil((t_health.val - p_dps.val) / m_health.val), 0);
         // New total mob health pool is calculated
