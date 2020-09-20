@@ -1,0 +1,100 @@
+
+
+<script>
+
+  class divVal {
+    constructor(id, name, value) {
+      this.id = id;
+      this.value = value;
+    };
+    get div() {
+      return this.getDiv();
+    };
+    getDiv() {
+      return document.querySelector(`#${this.id}`) || NaN;
+    };
+    // Update function to change the displayed value in div
+    refreshDiv() {
+        if (this.div) {
+          this.div.dataset.value = this.value;
+          this.div.textContent = this.value;
+        }
+      };
+  };
+
+
+  class Item {
+    constructor(id, description, attrName, stack, value, price, unlocked, owned) {
+      this.id = id;
+      this.description = description;
+      this.attrName = attrName;
+      this.stack = stack;
+      this.value = value;
+      this.price = price;
+      this.unlocked = unlocked;
+      this.owned = owned;
+    }
+    get div() {return this.getDiv()};
+    getDiv() {
+      return document.querySelector(`#${this.id}`) || NaN;
+    };
+  };
+
+  const items = {
+    healthItem: new Item(
+      "hp_plus",
+      "Increases health",
+      "hp",
+      "lin",
+      2,
+      20,
+      true,
+      0,
+    ),
+    damageItem: new Item(
+      "dp_plus",
+      "Increases damage",
+      "dps",
+      "lin",
+      2,
+      20,
+      true,
+      0,
+    ),
+  };
+
+  
+  const itemShop = document.querySelector("#item-shop");
+
+  function loadItemShop() {
+    console.log("hello!");
+    for ([itemName, item] of Object.entries(items)) {
+      itemShop.innerHTML += `
+        <div class="item-card">
+          <div class="item-detail">${itemName}</div>
+          <button class="item-detail item-price" data-value="${itemName}">${item.price}GP</button>
+        </div>`
+    }
+  }
+
+  function buyItem(e) {
+    // console.log(e.target.className.includes("item-price"));
+    // console.log(items[e.target.dataset.value])
+    console.log(player.gp)
+    const item = items[e.target.dataset.value];
+    if (player.gp.value >= item.price) {
+      // Update gold
+      player.gp.update(-item.price);
+      // Update player stat
+      if (item.stack === "lin") {
+        player[item.attrName].update(item.value);
+      }
+      updateLog(`Bought a ${e.target.dataset.value}`);
+    }
+  }
+
+  window.addEventListener('onload', loadItemShop())
+  itemShop.addEventListener('click', (event) => {
+    buyItem(event)
+  });
+</script>

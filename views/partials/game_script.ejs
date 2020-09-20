@@ -1,0 +1,211 @@
+
+
+<script>
+    let teleporterStage = 1;
+    let difficulty = 1;
+    let spawnProbability = 0.5;
+  
+    /* Define Classes */
+    class Attribute {
+      constructor(id, name, value) {
+        this.id = id;
+        this.name = name;
+        this.value = value;
+      };
+      get div() {
+        return this.getDiv();
+      };
+      getDiv() {
+        return document.querySelector(`#${this.id}`) || NaN;
+      };
+      // Update function to change both stored value and the displayed value in div
+      update(valueChange) {
+        // Change the class object value
+        this.value += valueChange;
+        // Change the corresponding div, if it exists
+        if (this.div) {
+          this.div.dataset.value = this.value;
+          this.div.textContent = this.value;
+        }
+      }
+    };
+
+    class Entity {
+      constructor(name, hp, dps, hps, gp) {
+        this.name = name;
+        this.hp = hp;
+        this.dps = dps;
+        this.hps = hps;
+        this.gp = gp;
+      }
+      // Getters
+      get itemsOwned() {
+
+      }
+      // Methods
+      tickHps() {
+        this.hp.update(this.hps.value);
+      }
+  
+      takeDamage(dmg) {
+        this.hp.update(-dmg);
+      };
+
+      refreshAttrDiv(attrName) {
+        const attrDiv = document.querySelector(`#${attrName}`);
+        if (attrDiv) {
+          attrDiv.innerText = this[attrName];
+        };
+      };
+    };
+  
+    class GameState {
+      constructor (healthState, damageState, mobState) {
+        this.healthPool = new Attribute("t_hp", "Total Enemy Health Pool", healthState),
+        this.damagePool = new Attribute("t_dp", "Total Enemy Damage Received", damageState),
+        this.mob = mobState
+      };
+      // Getters - for calculated parameters
+      get enemies() {
+        return new Attribute(
+          "t_enemies",
+          "total_enemies",
+          Math.ceil((this.healthPool.value-this.damagePool.value)/this.mob.hp.value)
+        );
+      };
+      get kills() {
+        return new Attribute(
+          "t_kills",
+          "total_kills",
+          Math.floor(this.damagePool.value/this.mob.hp.value)
+        )
+      };
+      get spawns() {
+        return new Attribute(
+          "t_spawns",
+          "total_spawns",
+          Math.ceil(this.healthPool.value/this.mob.hp.value)
+        );
+      };
+  
+      get mobDamage() {
+        return this.enemies.value * this.mob.dps.value;
+      }
+  
+      // Methods
+      spawnMob() {
+        this.healthPool.update(this.mob.hp.value);
+        // return true;
+      };
+  
+      calcMobDmgTaken(rawDmg) {
+        const calcDmg = Math.max(
+          Math.min(rawDmg, this.healthPool.value), 0
+        );
+        console.log(`Mobs take ${calcDmg} damage!`);
+        return calcDmg;
+      };
+  
+      calcMobDmgDealt() {
+        return this.mob.dps.value * this.enemies.value;
+      };
+  
+      refreshAttrDiv(attr) {
+        if (attr.div) {
+          attr.div.dataset.value = attr.value;
+          attr.div.textContent = attr.value;
+        }
+      };
+    };
+  
+    //////// Functions ////////
+    function iterateStage() {
+  
+      // Spawn mobs
+      if (spawnRoll()) {
+        console.log("Mob spawns!");
+        updateLog("Mob spawns!");
+        currentState.spawnMob();
+      };
+      // Mobs take damage
+      if (currentState.healthPool.value - currentState.damagePool.value > 0) {
+        currentState.damagePool.update(
+          currentState.calcMobDmgTaken(player.dps.value)
+        );
+        updateLog(`Player deals ${player.dps.value} damage!`);
+        currentState.refreshAttrDiv(currentState.enemies);
+        currentState.refreshAttrDiv(currentState.kills);
+      };
+      // Heal Player
+      player.tickHps();
+      // Player takes damage
+      const testDmg = currentState.calcMobDmgDealt();
+      if (testDmg > 0) {
+        updateLog(`Player takes ${testDmg} damage from ${currentState.enemies.value} enemies!`);
+      }
+      player.takeDamage(currentState.calcMobDmgDealt());
+    };
+    
+    function startRun() {
+      const runId = setInterval(() => {
+        iterateStage();
+        updateTimer();
+        // Check if player died
+        checkDeath(runId);
+      }, 1000);
+    };
+    
+    function checkDeath(runId) {
+      if (player.hp.value <= 0) {
+        updateLog("Player Dies!");
+        clearInterval(runId)
+      };
+    };
+    
+    function testRun() {
+      prevStart = Date.now();
+      iterateStage();
+    };
+  
+    function spawnRoll() {
+      const roll = Math.random();
+      return roll >= spawnProbability;
+    };
+  
+    function updateLog(msg) {
+      logDiv.innerHTML = `<p>${msg}</p>` + logDiv.innerHTML;
+    };
+
+    function updateTimer() {
+      runTimer.textContent = parseInt(runTimer.textContent) + 1;
+    };
+
+    //////// Initialize Class Objects ////////
+    const player = new Entity(
+      name = "Player",
+      hp = new Attribute("p_hp", "player_health", 100),
+      dps = new Attribute("p_dps", "player_damage_per_second", 5),
+      hps = new Attribute("p_hps", "player_healing_per_second", 0),
+      gp = new Attribute("p_gp", "player_gold", 100),
+    );
+  
+    const mob = new Entity(
+      name = "Mob",
+      hp = new Attribute("m_hp", "mob_health", 10),
+      dps = new Attribute("m_dps", "mob_damage_per_second", 5),
+      hps = new Attribute("m_hps", "mob_healing_per_second", 0),
+      gp = new Attribute("m_gp", "mob_gold", 10),
+    );
+   
+    const currentState = new GameState(0, 0, mob);
+
+    const runTimer = document.querySelector("#run-timer");
+    const startButton = document.querySelector("#start");
+    const testButton = document.querySelector("#test");
+    const logDiv = document.querySelector("#log")
+
+    testButton.addEventListener("click", testRun);
+    startButton.addEventListener("click", startRun);
+    
+  
+  </script>

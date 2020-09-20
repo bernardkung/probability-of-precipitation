@@ -1,0 +1,26 @@
+<script>
+
+  class Attribute {
+    constructor(id, name, value) {
+      this.id = id;
+      this.name = name;
+      this.value = value;
+    };
+    get div() {
+      return this.getDiv();
+    };
+    getDiv() {
+      return document.querySelector(`#${this.id}`) || NaN;
+    };
+    // Update function to change both stored value and the displayed value in div
+    update(valueChange) {
+      // Change the class object value
+      this.value += valueChange;
+      // Change the corresponding div, if it exists
+      if (this.div) {
+        this.div.dataset.value = this.value;
+        this.div.textContent = this.value;
+      }
+    }
+  };
+</script>
